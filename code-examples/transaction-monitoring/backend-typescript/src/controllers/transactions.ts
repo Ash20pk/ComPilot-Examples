@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { ComPilotService } from '../services/compilot';
 import { Transaction } from '../types/transaction';
+import { TransactionTracker } from '../services/transactionTracker';
 
 /**
  * Controller handling transaction submissions to ComPilot.
@@ -55,19 +56,46 @@ export class TransactionController {
     static async submitTransaction(req: Request, res: Response) {
         try {
             const transaction: Transaction = req.body;
+            const waitForWebhook = req.query.waitForWebhook === 'true';
+            const webhookTimeout = req.query.webhookTimeout ? parseInt(req.query.webhookTimeout as string) : 30000;
 
             console.log('💰 Processing transaction:', {
                 type: transaction.transactionType,
                 subType: transaction.transactionSubType,
                 direction: transaction.transactionInfo.direction,
                 amount: transaction.transactionInfo.amount,
-                currency: transaction.transactionInfo.currencyCode
+                currency: transaction.transactionInfo.currencyCode,
+                waitForWebhook
             });
 
+            // Submit transaction to ComPilot API
             const response = await ComPilotService.submitTransaction(transaction);
-
             console.log('✅ Transaction submitted successfully:', response);
-            res.json(response);
+
+            if (waitForWebhook && response.id) {
+                try {
+                    console.log(`⏳ Waiting for webhook response for transaction ${response.id}...`);
+                    // Wait for the webhook to be received
+                    const webhookResponse = await TransactionTracker.waitForWebhook(response.id, webhookTimeout);
+                    console.log(`✅ Received webhook for transaction ${response.id}:`, webhookResponse);
+                    
+                    // Return both the initial response and the webhook data
+                    res.json({
+                        initialResponse: response,
+                        webhookResponse
+                    });
+                } catch (webhookError) {
+                    console.error(`⏱️ Webhook timeout for transaction ${response.id}:`, webhookError);
+                    res.status(202).json({
+                        initialResponse: response,
+                        webhookStatus: 'timeout',
+                        message: 'Transaction submitted successfully, but webhook response timed out'
+                    });
+                }
+            } else {
+                // Return just the initial response if not waiting for webhook
+                res.json(response);
+            }
         } catch (error) {
             console.error('❌ Transaction error:', error);
             if (error instanceof Error) {

@@ -1,4 +1,4 @@
-import { Transaction } from '../types/transaction';
+import { Transaction, TransactionResponse } from '../types/transaction';
 
 /**
  * Service for interacting with the ComPilot API.
@@ -31,7 +31,7 @@ export class ComPilotService {
      * const response = await ComPilotService.submitTransaction(transaction);
      * ```
      */
-    static async submitTransaction(transaction: Transaction) {
+    static async submitTransaction(transaction: Transaction): Promise<TransactionResponse> {
         console.log('📝 Environment variables:', {
             apiUrl: process.env.COMPILOT_API_URL,
             hasApiKey: !!process.env.COMPILOT_API_KEY,
@@ -64,6 +64,6 @@ export class ComPilotService {
             throw new Error(`ComPilot API Error: ${JSON.stringify(data, null, 2)}`);
         }
 
-        return data;
+        return data as TransactionResponse;
     }
 } 

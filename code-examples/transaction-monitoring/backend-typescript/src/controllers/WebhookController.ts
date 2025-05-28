@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { IWebSocketServer } from '../websocket';
 import crypto from 'crypto';
+import { TransactionTracker } from '../services/transactionTracker';
 
 /**
  * Controller handling ComPilot webhook events.
@@ -87,6 +88,13 @@ export class WebhookController {
             if (!this.verifySignature(req.body, req.headers)) {
                 res.status(401).json({ error: 'Invalid signature' });
                 return;
+            }
+
+            // Check if this webhook corresponds to a pending transaction
+            const transactionId = req.body.payload?.transactionId;
+            if (transactionId) {
+                // Attempt to resolve any pending transaction waiting for this webhook
+                TransactionTracker.resolveWebhook(transactionId, req.body);
             }
 
             // Broadcast to all connected clients
