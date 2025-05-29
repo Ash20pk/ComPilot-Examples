@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "@compilot/js-sdk": "^2.1.12",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2"
-  },
-  "packageManager": "yarn@1.22.22"
-}
