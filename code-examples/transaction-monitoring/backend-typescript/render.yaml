@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: transaction-monitoring
+    env: node
+    buildCommand: ./render-build.sh
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # These will be set in the Render dashboard
+      - key: COMPILOT_API_URL
+        sync: false
+      - key: COMPILOT_API_KEY
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+      - key: COMPILOT_TMS_WORKFLOW_ID
+        sync: false
