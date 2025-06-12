@@ -48,6 +48,10 @@ class WebhookController {
                 }
                 // Check if this webhook corresponds to a pending transaction
                 const transactionId = req.body.payload?.transactionId;
+                // Handle null riskScore by changing it to 0
+                if (req.body.payload && req.body.payload.riskScore === null) {
+                    req.body.payload.riskScore = 0;
+                }
                 if (transactionId) {
                     // Attempt to resolve any pending transaction waiting for this webhook
                     transactionTracker_1.TransactionTracker.resolveWebhook(transactionId, req.body);
