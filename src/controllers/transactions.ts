@@ -81,27 +81,22 @@ export class TransactionController {
                     // Check if this was a timeout but we're returning the latest webhook anyway
                     if (webhookResponse._timeoutIndicator) {
                         console.log(`⏱️ Timeout reached, but returning latest webhook for ${response.id}:`, webhookResponse);
-                        res.status(202).json({
-                            initialResponse: response,
-                            webhookResponse,
-                            webhookStatus: 'timeout_with_partial_data',
-                            message: 'Transaction submitted, but final status was not received within the timeout period. Returning latest available status.'
-                        });
+                        res.status(202).json(webhookResponse);
                     } else {
                         console.log(`✅ Received final status webhook for transaction ${response.id}:`, webhookResponse);
-                        // Return both the initial response and the webhook data
-                        res.json({
-                            initialResponse: response,
-                            webhookResponse,
-                            webhookStatus: 'final'
-                        });
+                        // Return only the webhook response
+                        res.json(webhookResponse);
                     }
                 } catch (webhookError) {
                     console.error(`⏱️ No webhooks received for transaction ${response.id}:`, webhookError);
+                    // Return a consistent format with the other responses
                     res.status(202).json({
-                        initialResponse: response,
-                        webhookStatus: 'timeout_no_data',
-                        message: 'Transaction submitted successfully, but no webhook responses were received within the timeout period'
+                        eventType: 'transaction.timeout',
+                        payload: {
+                            transactionId: response.id,
+                            status: 'timeout',
+                            message: 'No webhook responses were received within the timeout period'
+                        }
                     });
                 }
             } else {
