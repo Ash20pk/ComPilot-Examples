@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
 import { createServer } from 'http';
 import { WebSocketServer } from './websocket';
 import { createWebhookRoutes } from './routes/webhookRoutes';
@@ -23,7 +22,6 @@ import { WebhookController } from './controllers/WebhookController';
  */
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
 // Create HTTP server (required for WebSocket support)
